@@ -1,0 +1,48 @@
+{
+  "name": "bun-api-kit",
+  "version": "1.0.0",
+  "description": "A minimal, production-ready HTTP API starter built on Bun.serve. It provides structured routing, rate limiting, request correlation, security headers, and consistent JSON responses with zero framework overhead.",
+  "module": "index.ts",
+  "type": "module",
+  "keywords": [
+    "bun",
+    "bun-api",
+    "api-starter",
+    "api-template",
+    "api-boilerplate",
+    "http-api",
+    "rest-api",
+    "bun-serve",
+    "typescript",
+    "rate-limiting",
+    "request-correlation",
+    "security-headers",
+    "json-api",
+    "backend",
+    "server",
+    "microservice",
+    "api-kit"
+  ],
+  "author": "Pimatis",
+  "homepage": "https://pimatis.org",
+  "bugs": {
+    "url": "https://github.com/Pimatis/bun-api-kit/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Pimatis/bun-api-kit.git"
+  },
+  "scripts": {
+    "start": "bun --watch index.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "rate-limiter-flexible": "^10.0.1",
+    "zod": "^3.23.8"
+  }
+}
