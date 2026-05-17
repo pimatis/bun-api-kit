@@ -6,7 +6,7 @@ const DEFAULT_MAX_BYTES = 1024 * 1024;
 
 /** Resolve the default route body limit from the environment. */
 export function defaultMaxBodyBytes(): number {
-  const raw = process.env.MAX_BODY_BYTES;
+  const raw = Bun.env.MAX_BODY_BYTES;
   if (raw === undefined || raw === "") {
     return DEFAULT_MAX_BYTES;
   }

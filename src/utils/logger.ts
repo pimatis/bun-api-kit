@@ -28,9 +28,11 @@ function shouldLog(level: LogLevel): boolean {
   return LOG_LEVELS[level] >= LOG_LEVELS[MIN_LEVEL];
 }
 
-/** Remove control characters so logs stay single-line and terminal-safe. */
+/** Remove all control characters and ANSI escape sequences so logs stay single-line and terminal-safe. */
 function sanitizeLogFragment(value: string): string {
-  return value.replace(/[\r\n\t]+/g, " ").replace(/\x1b\[[0-9;]*m/g, "");
+  return value
+    .replace(/[\x00-\x1f\x7f]+/g, " ")
+    .replace(/\x1b\[[0-9;]*[A-Za-z]/g, "");
 }
 
 /** Serialize optional context fields into `key=value` segments. */

@@ -12,17 +12,21 @@ type RequestIdStore = {
 /** Store the current request id without threading it through every function call. */
 const storage = new AsyncLocalStorage<RequestIdStore>();
 
+/** Only allow alphanumeric, hyphens, and underscores in request IDs. */
+const SAFE_ID_REGEX = /^[a-zA-Z0-9\-_]+$/;
+
 /**
- * Reads `X-Request-ID` or `X-Correlation-ID` when present and non-empty; otherwise generates a UUID.
+ * Reads `X-Request-ID` or `X-Correlation-ID` when present, non-empty, and safe;
+ * otherwise generates a UUID. Control characters and other unsafe input are rejected.
  */
 export function getRequestId(req: Request): string {
   const a = req.headers.get("x-request-id")?.trim();
-  if (a) {
-    return a.slice(0, HEADER_MAX);
+  if (a && a.length <= HEADER_MAX && SAFE_ID_REGEX.test(a)) {
+    return a;
   }
   const b = req.headers.get("x-correlation-id")?.trim();
-  if (b) {
-    return b.slice(0, HEADER_MAX);
+  if (b && b.length <= HEADER_MAX && SAFE_ID_REGEX.test(b)) {
+    return b;
   }
   return randomUUID();
 }

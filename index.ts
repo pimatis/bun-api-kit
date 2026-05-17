@@ -1,5 +1,7 @@
 import { handleRequest } from "./src/routes/routes.ts";
 import { log } from "./src/utils/logger.ts";
+import { apiFailure } from "./src/utils/response.ts";
+import { mergeSecurityHeaders } from "./src/utils/security/securityheaders.ts";
 
 /** Warn when a request takes suspiciously long, without changing the response flow. */
 const REQUEST_TIMEOUT_MS = 30_000;
@@ -7,6 +9,8 @@ const REQUEST_TIMEOUT_MS = 30_000;
 /** Start the Bun HTTP server and delegate every request into the shared route pipeline. */
 const server = Bun.serve({
   port: 3000,
+  // Hard ceiling at transport layer — per-route limits are tighter via createRouteBodyLimit
+  maxRequestBodySize: 1024 * 1024,
   fetch(req, server) {
     const timeout = setTimeout(() => {
       log("warn", `Request timeout exceeded for ${req.method} ${new URL(req.url).pathname}`);
@@ -16,7 +20,9 @@ const server = Bun.serve({
   },
   error(error) {
     log("error", `Server error: ${error instanceof Error ? error.message : String(error)}`);
-    return new Response(null, { status: 500 });
+    return mergeSecurityHeaders(
+      apiFailure({ message: "Internal server error." }, { status: 500 }),
+    );
   },
 });
 

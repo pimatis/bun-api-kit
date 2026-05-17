@@ -1,9 +1,6 @@
 import { AsyncLocalStorage } from "node:async_hooks";
 import { randomBytes } from "node:crypto";
 
-/** Legacy constant kept for future trace header validation expansion. */
-const HEADER_MAX = 128;
-
 /** Async-local trace payload used by logging and response finalization. */
 type TraceStore = {
   traceId: string;
@@ -35,14 +32,14 @@ export function runWithTrace<T>(fn: (traceId: string) => Promise<T>): Promise<T>
   return storage.run({ traceId, spanId }, () => fn(traceId));
 }
 
-/** Create a child span id from the current trace scope when one exists. */
+/** Create a child span id derived from the current parent span. */
 export function createChildSpan(): string {
   const store = storage.getStore();
   if (!store) {
     return generateSpanId();
   }
-  const [, newSpanId] = store.spanId.split("-").slice(0, 2);
-  return `${newSpanId}-${generateSpanId()}`;
+  // Derive child from first 8 hex chars of parent + 8 random hex chars (4 bytes)
+  return store.spanId.slice(0, 8) + randomBytes(4).toString("hex");
 }
 
 /** Surface trace headers in a format suitable for logs and outgoing responses. */

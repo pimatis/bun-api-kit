@@ -19,6 +19,9 @@ interface Gauge {
   value(labels?: MetricLabels): number;
 }
 
+/** Cap histogram samples to prevent unbounded memory growth. */
+const HISTOGRAM_MAX_SAMPLES = 1000;
+
 /** Simple in-memory metrics registry for lightweight observability. */
 class InMemoryMetrics {
   private counters = new Map<string, Map<string, number>>();
@@ -56,14 +59,22 @@ class InMemoryMetrics {
     };
   }
 
-  /** Build a histogram view for a named metric. */
+  /** Build a histogram view for a named metric (reservoir-capped). */
   getHistogram(name: string): Histogram {
     return {
       observe: (value, labels) => {
         const k = this.key(labels);
         const map = this.getOrSet(this.histograms, name, () => new Map());
         const arr = this.getOrSet(map, k, () => []);
-        arr.push(value);
+        if (arr.length < HISTOGRAM_MAX_SAMPLES) {
+          arr.push(value);
+        } else {
+          // Reservoir sampling: replace random element to cap memory usage
+          const idx = Math.floor(Math.random() * (arr.length + 1));
+          if (idx < arr.length) {
+            arr[idx] = value;
+          }
+        }
       },
     };
   }
@@ -97,11 +108,22 @@ class InMemoryMetrics {
     for (const [name, map] of this.histograms) {
       const stats: Record<string, { count: number; min: number; max: number; avg: number }> = {};
       for (const [k, values] of map) {
-        const sum = values.reduce((a, b) => a + b, 0);
+        if (values.length === 0) {
+          stats[k] = { count: 0, min: 0, max: 0, avg: 0 };
+          continue;
+        }
+        let min = Infinity;
+        let max = -Infinity;
+        let sum = 0;
+        for (const v of values) {
+          if (v < min) min = v;
+          if (v > max) max = v;
+          sum += v;
+        }
         stats[k] = {
           count: values.length,
-          min: Math.min(...values),
-          max: Math.max(...values),
+          min,
+          max,
           avg: sum / values.length,
         };
       }

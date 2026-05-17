@@ -74,6 +74,7 @@ An example production-oriented environment file is provided at [`.env.example`](
 - `NODE_ENV=production` enables the production CORS default, which denies browser origins unless `CORS_ALLOWED_ORIGINS` is set.
 - `CORS_ALLOWED_ORIGINS` should list the exact browser origins allowed to call the API.
 - `TRUSTED_PROXY_RANGES` should contain the IPs or IPv4 CIDRs of your reverse proxies before forwarded client IP headers are trusted.
+- `TRUSTED_PROXY_IPS` is a backward-compatible exact-IP alternative to `TRUSTED_PROXY_RANGES` (ignored when `TRUSTED_PROXY_RANGES` is set).
 - `MAX_BODY_BYTES` controls the default per-route body limit.
 - `LOG_LEVEL` controls console verbosity.
 

@@ -85,6 +85,7 @@ export function createCorsMiddleware(config: CorsConfig = {}) {
 
       const headers = new Headers();
       headers.set("Access-Control-Allow-Origin", origin);
+      headers.set("Vary", "Origin");
       if (cfg.credentials) {
         headers.set("Access-Control-Allow-Credentials", "true");
       }
@@ -94,8 +95,14 @@ export function createCorsMiddleware(config: CorsConfig = {}) {
       if (accessControlRequestMethod) {
         headers.set("Access-Control-Allow-Methods", cfg.methods?.join(", ") ?? DEFAULT_CORS.methods.join(", "));
       }
-      if (accessControlRequestHeaders) {
-        headers.set("Access-Control-Allow-Headers", accessControlRequestHeaders);
+      if (accessControlRequestHeaders && cfg.allowedHeaders?.length) {
+        // Only allow headers that are in the configured whitelist
+        const requested = accessControlRequestHeaders.split(",").map(h => h.trim().toLowerCase());
+        const allowed = cfg.allowedHeaders.map(h => h.toLowerCase());
+        const permitted = requested.filter(h => allowed.includes(h));
+        if (permitted.length > 0) {
+          headers.set("Access-Control-Allow-Headers", permitted.join(", "));
+        }
       }
       if (cfg.maxAge) {
         headers.set("Access-Control-Max-Age", String(cfg.maxAge));
@@ -113,6 +120,7 @@ export function createCorsMiddleware(config: CorsConfig = {}) {
         return response;
       }
       response.headers.set("Access-Control-Allow-Origin", origin);
+      response.headers.set("Vary", "Origin");
       if (cfg.credentials) {
         response.headers.set("Access-Control-Allow-Credentials", "true");
       }
